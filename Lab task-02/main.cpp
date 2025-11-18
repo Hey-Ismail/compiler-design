@@ -4,10 +4,10 @@
 using namespace std;
 
 bool isKeyword(string word) {
-    string keywords[20] = {
+    string keywords[100] = {
         "int", "float", "double", "char", "if", "else", "for", "while", "do",
         "return", "void", "break", "continue", "switch", "namespace", "using",
-        "true", "false", "bool", "main"};
+        "true", "false", "bool", "main", "cout"};
     for (int i = 0; i < 20; i++) {
         if (word == keywords[i])
             return true;
@@ -19,6 +19,15 @@ bool isOperator(char c) {
     string ops = "+-*/=%<>!";
     for (int i = 0; i < ops.length(); i++) {
         if (c == ops[i])
+            return true;
+    }
+    return false;
+}
+
+bool isPunctuation(char c) {
+    string punct = "(){}[];,'\"";
+    for (int i = 0; i < punct.length(); i++) {
+        if (c == punct[i])
             return true;
     }
     return false;
@@ -47,67 +56,61 @@ int main() {
         return 0;
     }
 
-    char ch;
-    string word = "";
+    string line;
+    int lineNumber = 1;
 
-    string kw = "";
-    string id = "";
-    string op = "";
-    string num = "";
+    cout << "\n---Lexical Analysis ---\n";
 
-    while (!file.eof()) {
-        file.get(ch);
+    while (getline(file, line)) {
+        string kw = "", id = "", op = "", punct = "", num = "", word = "";
+        int i = 0;
 
-        if (isOperator(ch)) {
-            op = op + ch + " ";
-        } else if (isalpha(ch) || ch == '_') {
-            word = "";
-            while (isalpha(ch) || isdigit(ch) || ch == '_') {
-                word = word + ch;
-                file.get(ch);
-                if (file.eof())
-                    break;
+        while (i < line.length()) {
+            char ch = line[i];
+
+            if (isOperator(ch)) {
+                op += ch;
+                op += " ";
+                i++;
+            } else if (isPunctuation(ch)) {
+                punct += ch;
+                punct += " ";
+                i++;
+            } else if (isalpha(ch) || ch == '_') {
+                word = "";
+                while (i < line.length() &&
+                       (isalpha(line[i]) || isdigit(line[i]) || line[i] == '_')) {
+                    word += line[i];
+                    i++;
+                }
+                if (isKeyword(word))
+                    kw += word + " ";
+                else if (isValidId(word))
+                    id += word + " ";
+            } else if (isdigit(ch)) {
+                word = "";
+                while (i < line.length() && isdigit(line[i])) {
+                    word += line[i];
+                    i++;
+                }
+                num += word + " ";
+            } else {
+                i++;
             }
-
-            if (isKeyword(word))
-                kw = kw + word + " ";
-            else if (isValidId(word))
-                id = id + word + " ";
-        } else if (isdigit(ch)) {
-            word = "";
-            while (isdigit(ch)) {
-                word = word + ch;
-                file.get(ch);
-                if (file.eof())
-                    break;
-            }
-            num = num + word + " ";
         }
+
+        // cout << "Line " << lineNumber << " : ";
+
+        cout << "Kw -> " << (kw == "" ? "None" : kw) << ", ";
+        cout << "Id -> " << (id == "" ? "None" : id) << ", ";
+        cout << "Op -> " << (op == "" ? "None" : op) << ", ";
+        cout << "Punct ->" << (punct == "" ? "None" : punct) << ", ";
+        cout << "Num -> " << (num == "" ? "None" : num) << endl;
+
+        // lineNumber++;
     }
 
     file.close();
-
-    cout << "\n--- Lexical Analysis ---\n";
-
-    if (kw == "")
-        cout << "Keywords: None\n";
-    else
-        cout << "Keywords: " << kw << endl;
-
-    if (id == "")
-        cout << "Identifiers: None\n";
-    else
-        cout << "Identifiers: " << id << endl;
-
-    if (op == "")
-        cout << "Operators: None\n";
-    else
-        cout << "Operators: " << op << endl;
-
-    if (num == "")
-        cout << "Numbers: None\n";
-    else
-        cout << "Numbers: " << num << endl;
 
     return 0;
 }
